@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Telepon</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        h1 { color: #333; }
+        form { margin-bottom: 20px; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+        button { padding: 8px 12px; margin: 5px; cursor: pointer; background-color: #4CAF50; color: white; border: none; }
+        button:hover { background-color: #45a049; }
+        ul { list-style-type: none; padding: 0; }
+        li { background: white; margin: 5px 0; padding: 10px; border-radius: 5px; display: flex; justify-content: space-between; }
+        .edit-btn { background-color: #ffa500; }
+        .delete-btn { background-color: #f44336; }
+        #file-input { display: none; }
+        #import-btn { background-color: #2196F3; }
+    </style>
+</head>
+<body>
+    <h1>Nama:Dinda Ramadhani</h1>
+    <h1>NIM:253309631001</h1>
+    <H1>SISTEM INFORMASI 2025</H1>
+    <h1>Manajemen kontak Telepon</h1>
+    <form id="contact-form">
+        <input type="text" id="name" placeholder="Nama" required>
+        <input type="tel" id="phone" placeholder="Nomor Telepon" required>
+        <button type="submit">Tambah Kontak</button>
+    </form>
+    <button id="export-btn">Export ke File JSON</button>
+    <button id="import-btn">Import dari File JSON</button>
+    <input type="file" id="file-input" accept=".json">
+    <ul id="contact-list"></ul>
+
+    <script>
+        const contactForm = document.getElementById('contact-form');
+        const contactList = document.getElementById('contact-list');
+        const exportBtn = document.getElementById('export-btn');
+        const importBtn = document.getElementById('import-btn');
+        const fileInput = document.getElementById('file-input');
+
+        let contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+
+        function renderContacts() {
+            contactList.innerHTML = '';
+            contacts.forEach((contact, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>${contact.name}: ${contact.phone}</span>
+                    <div>
+                        <button class="edit-btn" onclick="editContact(${index})">Edit</button>
+                        <button class="delete-btn" onclick="deleteContact(${index})">Hapus</button>
+                    </div>
+                `;
+                contactList.appendChild(li);
+            });
+        }
+
+        contactForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            contacts.push({ name, phone });
+            localStorage.setItem('contacts', JSON.stringify(contacts));
+            renderContacts();
+            contactForm.reset();
+        });
+
+        function editContact(index) {
+            const contact = contacts[index];
+            document.getElementById('name').value = contact.name;
+            document.getElementById('phone').value = contact.phone;
+            deleteContact(index);
+        }
+
+        function deleteContact(index) {
+            contacts.splice(index, 1);
+            localStorage.setItem('contacts', JSON.stringify(contacts));
+            renderContacts();
+        }
+
+        // Export to JSON file
+        exportBtn.addEventListener('click', () => {
+            const dataStr = JSON.stringify(contacts, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'contacts.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // Import from JSON file
+        importBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const importedContacts = JSON.parse(event.target.result);
+                        contacts = importedContacts;
+                        localStorage.setItem('contacts', JSON.stringify(contacts));
+                        renderContacts();
+                        alert('Kontak berhasil diimpor!');
+                    } catch (error) {
+                        alert('File JSON tidak valid.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        renderContacts();
+    </script>
+</body>
+</html>
